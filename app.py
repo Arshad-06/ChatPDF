@@ -38,13 +38,13 @@ from langchain import PromptTemplate
 
 ### PAGE ELEMENTS
 
-st.set_page_config(
-    page_title="RAG Agent Demo",
-    page_icon="🦜",
-    layout="centered",
-    initial_sidebar_state="collapsed",
-)
-st.markdown("### Leveraging the User to Improve Agents in RAG Use Cases")
+# st.set_page_config(
+#     page_title="RAG Agent Demo",
+#     page_icon="🦜",
+#     layout="centered",
+#     initial_sidebar_state="collapsed",
+# )
+# st.markdown("### Leveraging the User to Improve Agents in RAG Use Cases")
 
 
 def main():
