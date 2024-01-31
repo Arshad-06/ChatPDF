@@ -1,0 +1,10 @@
+pydantic
+langchain
+PyPDF2
+faiss-cpu
+altair<5
+huggingface_hub
+torch
+sentence-transformers
+google-search-results
+duckduckgo-search
