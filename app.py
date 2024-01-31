@@ -20,16 +20,21 @@ repo_id = "sentence-transformers/all-mpnet-base-v2"
 from datetime import datetime
 from langchain.tools import Tool
 
+
+HUGGINGFACEHUB_API_TOKEN = "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"
+
 hf = HuggingFaceHubEmbeddings(
     repo_id=repo_id,
     task="feature-extraction",
-    huggingfacehub_api_token="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",
+    huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
 )
+
 
 llm = HuggingFaceHub(
     repo_id="mistralai/Mistral-7B-Instruct-v0.2",
-    huggingfacehub_api_token="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",
+    huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
 )
+
 
 from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
 from langchain.vectorstores import Chroma
@@ -142,26 +147,24 @@ def main():
         # output container
         output_container = st.empty()
         if submit_clicked:
-            st_callback = StreamlitCallbackHandler(st.container())
-            response = agent.run(user_input, callbacks=[st_callback])
-            # response = agent.run(user_input)
+            # st_callback = StreamlitCallbackHandler(st.container())
+            # response = agent.run(user_input,callbacks = [st_callback])
+            response = agent.run(user_input)
             st.write(response)
-            output_container = output_container.container()
-            output_container.chat_message("user").write(user_input)
-            with st.chat_message("assistant"):
-                st_callback = StreamlitCallbackHandler(st.container())
-                response = agent.run(user_input, callbacks=[st_callback])
-                st.write(response)
+            # output_container = output_container.container()
+            # output_container.chat_message("user").write(user_input)
+            # with st.chat_message("assistant"):
+            #     st_callback = StreamlitCallbackHandler(st.container())
+            #     response = agent.run(user_input, callbacks=[st_callback])
+            #     st.write(response)
 
-            answer_container = output_container.chat_message("assistant", avatar="🦜")
-            st_callback = StreamlitCallbackHandler(
-                answer_container,
-            )
+            # answer_container = output_container.chat_message("assistant", avatar="🦜")
+            # st_callback = StreamlitCallbackHandler(answer_container,)
 
-            answer = agent.run(user_input, callbacks=[st_callback])
+            # answer = agent.run(user_input, callbacks=[st_callback])
 
-            answer_container = output_container.container()
-            answer_container.chat_message("assistant").write(answer)
+            # answer_container = output_container.container()
+            # answer_container.chat_message("assistant").write(answer)
 
 
 if __name__ == "__main__":
