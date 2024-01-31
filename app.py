@@ -39,7 +39,7 @@ llm = HuggingFaceHub(
 from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain import PromptTemplate
+from langchain.prompts import PromptTemplate
 
 ### PAGE ELEMENTS
 
