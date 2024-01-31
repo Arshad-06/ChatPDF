@@ -136,7 +136,7 @@ def main():
         # initialize agent
         agent = initialize_agent(
             agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            # tools=[db_search_tool, google_searchtool],
+            tools=[db_search_tool],
             llm=llm,
             verbose=True,
             max_iterations=5,
