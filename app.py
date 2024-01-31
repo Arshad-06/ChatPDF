@@ -6,28 +6,39 @@ from utils.utils_ask_human import CustomAskHumanTool
 from utils.utils_model_params import get_model_params
 from utils.utils_prompts import create_agent_prompt, create_qa_prompt
 from PyPDF2 import PdfReader
-from langchain_community.vectorstores import FAISS
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.embeddings import HuggingFaceHubEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.embeddings import HuggingFaceHubEmbeddings
 from langchain import HuggingFaceHub
 import torch
 import streamlit as st
 from langchain.utilities import SerpAPIWrapper
-from langchain.tools import DuckDuckGoSearchRun
 import os
 
+# hf_token = os.environ["HF_TOKEN"]
+# serp_token = os.environ["SERP_TOKEN"]
 repo_id = "sentence-transformers/all-mpnet-base-v2"
-from datetime import datetime
-from langchain.tools import Tool
-
 
 HUGGINGFACEHUB_API_TOKEN = "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"
-
 hf = HuggingFaceHubEmbeddings(
     repo_id=repo_id,
     task="feature-extraction",
     huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
 )
+
+EMB_SBERT_MPNET_BASE = "sentence-transformers/all-mpnet-base-v2"
+config = {
+    "persist_directory": None,
+    "load_in_8bit": False,
+    "embedding": EMB_SBERT_MPNET_BASE,
+}
+
+
+def create_sbert_mpnet():
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    return HuggingFaceEmbeddings(
+        model_name=EMB_SBERT_MPNET_BASE, model_kwargs={"device": device}
+    )
 
 
 llm = HuggingFaceHub(
@@ -35,11 +46,13 @@ llm = HuggingFaceHub(
     huggingfacehub_api_token=HUGGINGFACEHUB_API_TOKEN,
 )
 
+if config["embedding"] == EMB_SBERT_MPNET_BASE:
+    embedding = create_sbert_mpnet()
 
 from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
-from langchain_community.vectorstores import Chroma
+from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
-from langchain.prompts import PromptTemplate
+from langchain import PromptTemplate
 
 ### PAGE ELEMENTS
 
@@ -54,7 +67,7 @@ from langchain.prompts import PromptTemplate
 
 def main():
     st.set_page_config(page_title="Ask your PDF powered by Search Agents")
-    st.header("Ask your PDF powered by Search Agents 💬")
+    st.header("Ask your PDF with RAG Agent 💬")
 
     # upload file
     pdf = st.file_uploader("Upload your PDF and chat with Agent", type="pdf")
@@ -74,13 +87,23 @@ def main():
         embeddings = hf
         knowledge_base = FAISS.from_texts(texts, embeddings)
 
-        retriever = knowledge_base.as_retriever(search_kwargs={"k": 3})
+        retriever = knowledge_base.as_retriever(search_kwargs={"k": 5})
+        # retriever = FAISS.as_retriever()
+        # persist_directory = config["persist_directory"]
+        # vectordb = Chroma.from_documents(documents=texts, embedding=embedding, persist_directory=persist_directory)
+
+        # retriever = vectordb.as_retriever(search_kwargs={"k":5})
+
+        # mode = st.selectbox(
+        #     label="Select agent type",
+        #     options=("Agent with AskHuman tool", "Traditional RAG Agent","Search Agent"),
+        # )
 
         qa_chain = RetrievalQA.from_chain_type(
             llm=llm,
             chain_type="stuff",
             retriever=retriever,
-            return_source_documents=False,
+            return_source_documents=True,
             chain_type_kwargs={
                 "prompt": create_qa_prompt(),
             },
@@ -94,38 +117,26 @@ def main():
         db_search_tool = Tool(
             name="dbRetrievalTool",
             func=qa_chain,
-            description="""Use this tool to answer document related questions. The input to this tool should be the question.""",
+            description="""Use this tool first to answer human questions. The input to this tool should be the question.""",
         )
 
         # search = SerpAPIWrapper(serpapi_api_key=serp_token)
 
-        # google_searchtool= Tool(
-        #         name="Current Search",
-        #         func=search.run,
-        #         description="use this tool to answer real time or current search related questions.",
-        #     )
-        search = DuckDuckGoSearchRun()
-        search_tool = Tool(
-            name="search",
-            func=search,
-            description="use this tool to answer real time or current search related questions.",
-        )
-        # Define a new tool that returns the current datetime
-        datetime_tool = Tool(
-            name="Datetime",
-            func=lambda x: datetime.now().isoformat(),
-            description="Returns the current datetime",
-        )
+        # google_searchtool = Tool(
+        #     name="Current Search",
+        #     func=search.run,
+        #     description="use this tool to answer questions if the answer from other tools are not sufficient.",
+        # )
+
         # tool for asking human
         human_ask_tool = CustomAskHumanTool()
         # agent prompt
         prefix, format_instructions, suffix = create_agent_prompt()
-        mode = "Agent with AskHuman tool"
 
         # initialize agent
         agent = initialize_agent(
             agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
-            tools=[db_search_tool, search_tool, datetime_tool],
+            # tools=[db_search_tool, google_searchtool],
             llm=llm,
             verbose=True,
             max_iterations=5,
@@ -147,24 +158,16 @@ def main():
         # output container
         output_container = st.empty()
         if submit_clicked:
-            # st_callback = StreamlitCallbackHandler(st.container())
-            # response = agent.run(user_input,callbacks = [st_callback])
-            response = agent.run(user_input)
-            st.write(response)
-            # output_container = output_container.container()
-            # output_container.chat_message("user").write(user_input)
-            # with st.chat_message("assistant"):
-            #     st_callback = StreamlitCallbackHandler(st.container())
-            #     response = agent.run(user_input, callbacks=[st_callback])
-            #     st.write(response)
+            output_container = output_container.container()
+            output_container.chat_message("user").write(user_input)
 
-            # answer_container = output_container.chat_message("assistant", avatar="🦜")
-            # st_callback = StreamlitCallbackHandler(answer_container,)
+            answer_container = output_container.chat_message("assistant", avatar="🦜")
+            st_callback = StreamlitCallbackHandler(answer_container)
 
-            # answer = agent.run(user_input, callbacks=[st_callback])
+            answer = agent.run(user_input, callbacks=[st_callback])
 
-            # answer_container = output_container.container()
-            # answer_container.chat_message("assistant").write(answer)
+            answer_container = output_container.container()
+            answer_container.chat_message("assistant").write(answer)
 
 
 if __name__ == "__main__":
