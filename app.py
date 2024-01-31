@@ -38,13 +38,13 @@ from langchain import PromptTemplate
 
 ### PAGE ELEMENTS
 
-# st.set_page_config(
-#     page_title="RAG Agent Demo",
-#     page_icon="🦜",
-#     layout="centered",
-#     initial_sidebar_state="collapsed",
-# )
-# st.markdown("### Leveraging the User to Improve Agents in RAG Use Cases")
+st.set_page_config(
+    page_title="RAG Agent Demo",
+    page_icon="🦜",
+    layout="centered",
+    initial_sidebar_state="collapsed",
+)
+st.markdown("### Leveraging the User to Improve Agents in RAG Use Cases")
 
 
 def main():
@@ -142,24 +142,26 @@ def main():
         # output container
         output_container = st.empty()
         if submit_clicked:
-            # st_callback = StreamlitCallbackHandler(st.container())
-            # response = agent.run(user_input,callbacks = [st_callback])
-            response = agent.run(user_input)
+            st_callback = StreamlitCallbackHandler(st.container())
+            response = agent.run(user_input, callbacks=[st_callback])
+            # response = agent.run(user_input)
             st.write(response)
-            # output_container = output_container.container()
-            # output_container.chat_message("user").write(user_input)
-            # with st.chat_message("assistant"):
-            #     st_callback = StreamlitCallbackHandler(st.container())
-            #     response = agent.run(user_input, callbacks=[st_callback])
-            #     st.write(response)
+            output_container = output_container.container()
+            output_container.chat_message("user").write(user_input)
+            with st.chat_message("assistant"):
+                st_callback = StreamlitCallbackHandler(st.container())
+                response = agent.run(user_input, callbacks=[st_callback])
+                st.write(response)
 
-            # answer_container = output_container.chat_message("assistant", avatar="🦜")
-            # st_callback = StreamlitCallbackHandler(answer_container,)
+            answer_container = output_container.chat_message("assistant", avatar="🦜")
+            st_callback = StreamlitCallbackHandler(
+                answer_container,
+            )
 
-            # answer = agent.run(user_input, callbacks=[st_callback])
+            answer = agent.run(user_input, callbacks=[st_callback])
 
-            # answer_container = output_container.container()
-            # answer_container.chat_message("assistant").write(answer)
+            answer_container = output_container.container()
+            answer_container.chat_message("assistant").write(answer)
 
 
 if __name__ == "__main__":
