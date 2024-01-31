@@ -6,9 +6,9 @@ from utils.utils_ask_human import CustomAskHumanTool
 from utils.utils_model_params import get_model_params
 from utils.utils_prompts import create_agent_prompt, create_qa_prompt
 from PyPDF2 import PdfReader
-from langchain.vectorstores import FAISS
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.embeddings import HuggingFaceHubEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.embeddings import HuggingFaceHubEmbeddings
 from langchain import HuggingFaceHub
 import torch
 import streamlit as st
@@ -37,7 +37,7 @@ llm = HuggingFaceHub(
 
 
 from langchain.text_splitter import CharacterTextSplitter, TokenTextSplitter
-from langchain.vectorstores import Chroma
+from langchain_community.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain import PromptTemplate
 
